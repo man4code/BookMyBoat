@@ -1,3 +1,0 @@
-﻿# BookYourBoat.Client
-
-
