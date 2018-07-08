@@ -1,0 +1,99 @@
+﻿GO
+alter PROCEDURE [dbo].GETCUSTOMERLIST
+AS
+BEGIN
+SET NOCOUNT ON;
+SELECT * FROM dbo.Customer ORDER BY Id ASC
+END
+GO
+alter PROCEDURE [dbo].SAVECUSTOMERS
+(
+@ID INT,
+@NAME VARCHAR(100),
+@EMAIL VARCHAR(100),
+@PASSWORD VARCHAR(50),
+@PHONE NVARCHAR(10),
+@Address VARCHAR(MAX),
+@RETURNCODE NVARCHAR(20) OUTPUT
+)
+AS
+BEGIN
+	SET @RETURNCODE = 'C200'
+	IF EXISTS (SELECT 1 FROM dbo.Customer WHERE Id = @ID)
+	BEGIN
+		IF EXISTS (SELECT 1 FROM dbo.Customer WHERE Email = @EMAIL AND Id <> @ID)
+		BEGIN
+			SET @RETURNCODE = 'C201'
+			RETURN
+		END
+		IF EXISTS (SELECT 1 FROM dbo.Customer WHERE Phone = @PHONE AND Id <> @ID)
+		BEGIN
+			SET @RETURNCODE = 'C202'
+			RETURN
+		END
+		UPDATE dbo.Customer SET 
+		Name = @NAME,
+		Email = @EMAIL,
+		Password = @PASSWORD,
+		Phone = @PHONE,
+		IsActive = 1,
+		Address = @Address
+		WHERE Id= @ID
+	END
+	ELSE	
+	BEGIN	
+	IF EXISTS (SELECT 1 FROM dbo.Customer WHERE Email = @EMAIL)
+	BEGIN	
+		SET @RETURNCODE = 'C201'
+		RETURN
+	END
+	IF EXISTS (SELECT 1 FROM dbo.Customer WHERE Phone = @PHONE)
+	BEGIN	
+		SET @RETURNCODE = 'C202'
+		RETURN
+	END
+	INSERT INTO dbo.Customer
+	(
+	    Name,
+	    Email,
+	    Password,
+	    Phone,
+		Address,
+		isActive
+	)
+	VALUES
+	(   @NAME, -- Name - varchar(100)
+	    @EMAIL, -- Email - varchar(100)
+	    @PASSWORD, -- Password - varchar(50)
+	    @PHONE, -- Phone - nchar(10)
+		@Address,
+		1
+	    )
+		SET @RETURNCODE = 200
+
+	END
+END
+
+GO
+GO
+alter PROCEDURE [dbo].DELETEUSER
+(
+@ID INT,
+@RETURNCODE NVARCHAR(20) OUTPUT
+)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SET @RETURNCODE = '200'
+	IF NOT EXISTS (SELECT 1 FROM dbo.Customer WHERE Id = @ID)
+	BEGIN
+		SET @RETURNCODE = 'C203'
+		RETURN
+	END
+	ELSE
+	BEGIN
+	DELETE FROM dbo.Customer WHERE Id= @ID
+	SET @RETURNCODE = 'C200'
+	RETURN
+	END
+END	
